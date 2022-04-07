@@ -7,7 +7,71 @@
 using namespace std;
 const int MAX_SIZE = 1000;
 
+//==========================================================
+//CACHE CLASS
+//==========================================================
+class Entry {
+public:
+  Entry(int addr){
+    set_valid(true);
+    set_data(addr);
+  };
+  ~Entry();
+  void display(ofstream& outfile);
+
+  void set_tag(int _tag) { tag = _tag; }
+  int get_tag() { return tag; }
+
+  void set_valid(bool _valid) { valid = _valid; }
+  bool get_valid() { return valid; }
+
+  void set_index(int _index) { index = _index; }
+  int get_index() { return index; }
+
+  void set_data(int _data) { data = _data; }
+  int get_data() { return data; }
+
+private:  
+  bool valid;
+  unsigned tag;
+  int index;
+  int data; 
+};
+
+class Cache {
+public:
+  Cache(int num_entries, int associativity) {
+    set_assoc(associativity);
+    set_num_entries(num_entries);
+  };
+  ~Cache();
+
+  void display(ofstream& outfile);
+
+  void set_assoc(int _assoc) { assoc = _assoc; }
+  void set_num_entries(int _entries) { num_entries = _entries; }
+
+
+  int get_index(unsigned long addr);
+  int get_tag(unsigned long addr);
+
+  unsigned long retrieve_addr(int way, int index);
   
+  bool hit(ofstream& outfile, unsigned long addr);
+
+  void update(ofstream& outfile, unsigned long addt);
+
+  
+private:
+  int assoc;
+  unsigned num_entries;
+  int num_sets;
+  Entry **entries;
+};
+//==========================================================
+//MAIN METHOD
+//==========================================================
+
 int main(int argc, char*argv[]) {
 
   //FILE I/O
@@ -49,18 +113,27 @@ int main(int argc, char*argv[]) {
   }
   //close the input stream
   input.close();
+  //open output file stream for writing
+  output.open(output_filename);
 
-
-
-
-
-
-
+  //Create Cache
+  Cache* myCache = new Cache(entries,assoc);
+  //Loop through input
+  int i = 0;
+  for (i  = 0; i < nums.size(); i++) {
+    //Create Entry
+    Entry* myEntry = new Entry(nums[i]);
+    //Calculate/Set Index
+    int index = nums[i] % assoc;
+    myEntry->set_index(index);
+    //Calculate/Set Tag
+    int tag = nums[i] / assoc;
+    myEntry->set_tag(tag);
+    //Set Valid Bit
+  }
 
 
   
-  //open output file stream for writing
-  output.open(output_filename);
   //write to output file
   for (int i = 0; i < count; i++)
     output << "ADDR : " << nums[i] << endl; 
@@ -70,51 +143,4 @@ int main(int argc, char*argv[]) {
   return 0;
 }
 
-//==========================================================
-//CACHE CLASS
-//==========================================================
-class Entry {
-public:
-  Entry();
-  ~Entry();
-  void display(ofstream& outfile);
 
-  void set_tag(int _tag) { tag = _tag; }
-  int get_tag() { return tag; }
-
-  void set_valid(bool _valid) { valid = _valid; }
-  bool get_valid() { return valid; }
-
-  void set_ref(int _ref) { ref = _ref; }
-  int get_ref() { return ref; }
-
-private:  
-  bool valid;
-  unsigned tag;
-  int ref;
-};
-
-class Cache {
-public:
-  Cache(int, int);
-  ~Cache();
-
-  void display(ofstream& outfile);
-
-
-  int get_index(unsigned long addr);
-  int get_tag(unsigned long addr);
-
-  unsigned long retrieve_addr(int way, int index);
-  
-  bool hit(ofstream& outfile, unsigned long addr);
-
-  void update(ofstream& outfile, unsigned long addt);
-
-  
-private:
-  int assoc;
-  unsigned num_entries;
-  int num_sets;
-  Entry **entries;
-};
