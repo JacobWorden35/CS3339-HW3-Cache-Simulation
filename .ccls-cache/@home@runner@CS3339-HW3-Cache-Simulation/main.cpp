@@ -2,21 +2,26 @@
 #include <cstdlib>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <tuple>
 
-
+//GLOBALS
 using namespace std;
 const int MAX_SIZE = 1000;
 
+
 //==========================================================
-//CACHE CLASS
+//                      ENTRY CLASS
 //==========================================================
 class Entry {
 public:
+  //CONSTRUCTORS
   Entry(int addr){
-    set_valid(true);
     set_data(addr);
   };
   ~Entry();
+
+  //FUNCTIONS
   void display(ofstream& outfile);
 
   void set_tag(int _tag) { tag = _tag; }
@@ -31,115 +36,149 @@ public:
   void set_data(int _data) { data = _data; }
   int get_data() { return data; }
 
+  void set_way(int _way) { data = _way; }
+  int get_way() { return way; }
+
 private:  
   bool valid;
   unsigned tag;
   int index;
+  int way;
   int data; 
 };
-
+//==========================================================
+//                      CACHE CLASS
+//==========================================================
 class Cache {
 public:
+  //CONSTRUCTORS
   Cache(int num_entries, int associativity) {
     set_assoc(associativity);
     set_num_entries(num_entries);
   };
   ~Cache();
+  //FUNCTIONS
 
-  void display(ofstream& outfile);
 
+  //      Insert an Entry to the Cache
+  void insert(Entry* entry, string out) {
+    //      Cache is empty
+    if (cache.size() == 0) {
+      miss(out,entry->get_data());
+      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
+    }
+    //      Check cache
+    for (int i = 0; i < cache.size(); i++) {
+      if (get<3>(cache[i]) == entry->get_data()) { //HIT
+        hit(out,entry->get_data());
+        break;
+      } else if (get<1>(cache[i]) == entry->get_index()) { //REPLACE
+          miss(out,entry->get_data());
+          cache.emplace_back(1, entry->get_index(), true, entry->get_data());
+        break;
+      }
+    }
+    //      MISS
+      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
+      miss(out,entry->get_data());
+  }
+
+  //      Outputs a HIT
+  void hit(string output, int addr) {
+    output.append(to_string(addr) + " : HIT \n");
+  };
+  //      Outputs a MISS
+  void miss(string output, int addr) {
+    output.append(to_string(addr) + " : MISS \n");
+  };
+  //      Sets + Gets
   void set_assoc(int _assoc) { assoc = _assoc; }
   void set_num_entries(int _entries) { num_entries = _entries; }
-
-
   int get_index(unsigned long addr);
   int get_tag(unsigned long addr);
-
+  //      NOT SURE YET
+  void display(ofstream& outfile);
   unsigned long retrieve_addr(int way, int index);
-  
-  bool hit(ofstream& outfile, unsigned long addr);
-
   void update(ofstream& outfile, unsigned long addt);
-
-  
+  //      Cache
+  vector<tuple<int, int, bool,int>> cache;
+      /*      way  index  V  data  */
 private:
   int assoc;
   unsigned num_entries;
   int num_sets;
   Entry **entries;
+  
+        
 };
 //==========================================================
-//MAIN METHOD
+//                        MAIN
 //==========================================================
 
 int main(int argc, char*argv[]) {
 
   //FILE I/O
-  //check if the correct number of arguments have been passed; bail otherwise
+  //      Check for the correct # of args 
   if (argc < 4) {
     cout << "Usage: " << endl;
     cout << "   ./cache num_entries associativity filename" << endl;
     return 0;
   }
-  //get args
+  //      Get args
   unsigned entries = atoi(argv[1]);
   unsigned assoc = atoi(argv[2]);
   string input_filename = argv[3];
-  //create output filename
+  //      Create output filename
   string output_filename = "cache_sim_output";
+  string out = "";
 
-  //print the args (TESTING)
+  //      Print the args (TESTING)
   cout << "Number of entries: " << entries << endl;
   cout << "Associativity: " << assoc << endl;
   cout << "Input File Name: " << input_filename << endl;
   //return 0;
 
-  //create input and output files streams 
+  //      Create input and output files streams 
   ofstream output;
   ifstream input;
-  //open input stream for reading 
+  //      Open input stream for reading 
   input.open(input_filename);
-  //check if input stream has been succesfully opened; bail otherwise 
+  //      Check if input stream has been succesfully opened; bail otherwise 
   if (!input.is_open()) {
     cerr << "Could not open input file " << input_filename << ". Exiting ..." << endl;
     exit(0);
   }
-  //populate input vector nums
+  //      Populate input vector nums
   vector<int> nums;
   int count = 0;
   while (!input.eof() && count < MAX_SIZE) {
     input >> nums[count];
     count++;
   }
-  //close the input stream
-  input.close();
-  //open output file stream for writing
-  output.open(output_filename);
-
-  //Create Cache
-  Cache* myCache = new Cache(entries,assoc);
-  //Loop through input
-  int i = 0;
-  for (i  = 0; i < nums.size(); i++) {
-    //Create Entry
-    Entry* myEntry = new Entry(nums[i]);
-    //Calculate/Set Index
-    int index = nums[i] % assoc;
-    myEntry->set_index(index);
-    //Calculate/Set Tag
-    int tag = nums[i] / assoc;
-    myEntry->set_tag(tag);
-    //Set Valid Bit
+  //      Print the input stream (TESTING)
+  for (int i = 0; i < nums.size(); i++) {
+    cout << nums[i] << " ";  
   }
-
-
-  
-  //write to output file
-  for (int i = 0; i < count; i++)
-    output << "ADDR : " << nums[i] << endl; 
-  //close output stream
+  //      Close the input stream
+  input.close();
+  //      Open output file stream for writing
+  output.open(output_filename);
+  //      Create Cache
+  Cache* myCache = new Cache(entries,assoc);
+  //      Loop through input
+  for (int i = 0; i < nums.size(); i++) {
+    //      Create Entry
+    Entry* myEntry = new Entry(nums[i]);
+    //      Calculate/Set Index & Tag
+    myEntry->set_index(nums[i] % assoc);
+    myEntry->set_tag(nums[i] / assoc);
+    //      Put Entry in Cache
+    myCache->insert(myEntry, out);
+  }
+  //      Write to output file
+  output << out;
   output.close();
-  //end simulation
+  //      End simulation
   return 0;
 }
 
