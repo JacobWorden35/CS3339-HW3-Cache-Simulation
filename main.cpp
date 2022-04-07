@@ -5,10 +5,12 @@
 #include <string>
 #include <tuple>
 
-//GLOBALS
 using namespace std;
-const int MAX_SIZE = 1000;
-
+string str;
+string strAddr;
+string delim = " ";
+string charDigit;
+int indx = 0;
 
 //==========================================================
 //                      ENTRY CLASS
@@ -135,7 +137,6 @@ int main(int argc, char*argv[]) {
   //      Print the args (TESTING)
   cout << "Number of entries: " << entries << endl;
   cout << "Associativity: " << assoc << endl;
-  cout << "Input File Name: " << input_filename << endl;
   //return 0;
 
   //      Create input and output files streams 
@@ -143,7 +144,7 @@ int main(int argc, char*argv[]) {
   ifstream input;
   //      Open input stream for reading 
   input.open(input_filename);
-  //      Check if input stream has been succesfully opened; bail otherwise 
+  //      Check if input stream has been succesfully opened;
   if (!input.is_open()) {
     cerr << "Could not open input file " << input_filename << ". Exiting ..." << endl;
     exit(0);
@@ -151,10 +152,20 @@ int main(int argc, char*argv[]) {
   //      Populate input vector nums
   vector<int> nums;
   int count = 0;
-  while (!input.eof() && count < MAX_SIZE) {
-    input >> nums[count];
-    count++;
+  while (!input.eof()) {
+    getline(input, str);
+    strAddr += str + " ";
   }
+  for(int i = 0; i < strAddr.length(); i++) {
+    if(to_string(strAddr[i]) != delim) {
+      charDigit += strAddr[i];
+    }
+    cout << stoi(charDigit) << endl;
+    nums[indx] = stoi(charDigit);
+    charDigit = "";
+    indx++;
+  }
+  //cout << "Input Stream:" << strAddr << endl;
   //      Print the input stream (TESTING)
   for (int i = 0; i < nums.size(); i++) {
     cout << nums[i] << " ";  
@@ -166,7 +177,9 @@ int main(int argc, char*argv[]) {
   //      Create Cache
   Cache* myCache = new Cache(entries,assoc);
   //      Loop through input
+  cout << nums.size() << endl;
   for (int i = 0; i < nums.size(); i++) {
+    cout << "Poop" << endl;
     //      Create Entry
     Entry* myEntry = new Entry(nums[i]);
     //      Calculate/Set Index & Tag
