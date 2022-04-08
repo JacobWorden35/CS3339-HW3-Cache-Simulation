@@ -83,6 +83,7 @@ public:
           // IMPLEMENT LRU
           if (get<2>(cache[i]) == true) {
             cout << "1 is replaced with 5" << endl;
+            cache.erase(cache.begin()+(i-1));
             cache.emplace_back(0, entry->get_index(), false, entry->get_data());
             return;
           }
