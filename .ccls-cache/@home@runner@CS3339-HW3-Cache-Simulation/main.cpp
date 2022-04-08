@@ -71,10 +71,13 @@ public:
       miss(out,entry->get_data());
       entry->set_way(0);
       cache.emplace_back(entry->get_way(), entry->get_index(), true, entry->get_data());
+      cout << cache.size() << endl;
       return;
     }
     //      Check cache
+    
     for (int i = 0; i < cache.size(); i++) {
+      cout << get<3>(cache[i]) << endl;
       //      HIT
       if (get<3>(cache[i]) == entry->get_data()) { 
         cout << "Found Address, HIT: " << entry->get_data() << endl;
@@ -223,6 +226,8 @@ int main(int argc, char*argv[]) {
     myCache->insert(myEntry, out);
   }
   //      Write to output file
+  cout << "This is file out: " << endl;
+  cout<< out << endl;
   output << out;
   output.close();
   //      End simulation
