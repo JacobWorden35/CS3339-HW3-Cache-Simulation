@@ -93,7 +93,7 @@ public:
           //      Look for available ways
           for (int j = 0; i < ways; i++) {
             //Way is available
-            if(get<0>(cache[i]) != j) {
+            if(get<0>(cache[i]) == j) {
               cout << "Set to new Way" << endl;
               entry->set_way(j);
               cache.emplace_back(j, entry->get_index(), true, entry->get_data());
@@ -121,10 +121,6 @@ public:
           }
       }
     }
-    //      MISS
-      cout << "Cache Open, Miss: " << entry->get_data() << endl;
-      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
-      miss(out,entry->get_data());
       return;
   }
 
@@ -204,7 +200,7 @@ int main(int argc, char*argv[]) {
   while (iss >> num) {
     nums.push_back(num);
   }
-  cout << "Input Stream:" << strAddr << endl;
+  cout << "Input Stream: " << strAddr << endl;
   //      Print the input stream (TESTING)
   /*for (int i = 0; i < nums.size(); i++) {
     cout << nums[i] << " ";  
