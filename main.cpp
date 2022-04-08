@@ -63,25 +63,39 @@ public:
 
   //      Insert an Entry to the Cache
   void insert(Entry* entry, string out) {
+    
     //      Cache is empty
     if (cache.size() == 0) {
+      cout << "Cache Empty, Miss: " << entry->get_data() << endl;
       miss(out,entry->get_data());
-      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
+      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+      return;
     }
     //      Check cache
     for (int i = 0; i < cache.size(); i++) {
       if (get<3>(cache[i]) == entry->get_data()) { //HIT
+        cout << "Found Address, HIT: " << entry->get_data() << endl;
         hit(out,entry->get_data());
-        break;
+        return;
       } else if (get<1>(cache[i]) == entry->get_index()) { //REPLACE
+          cout << "Cache Conflict, Miss: " << entry->get_data() << endl;
           miss(out,entry->get_data());
+          // IMPLEMENT LRU
+          if (get<2>(cache[i]) == true) {
+            cout << "1 is replaced with 5" << endl;
+            cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+            return;
+          }
+          cout << "Set to new Way" << endl;
           cache.emplace_back(1, entry->get_index(), true, entry->get_data());
-        break;
+          return;
       }
     }
     //      MISS
-      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
+      cout << "Cache Open, Miss: " << entry->get_data() << endl;
+      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
       miss(out,entry->get_data());
+    return;
   }
 
   //      Outputs a HIT
@@ -162,9 +176,9 @@ int main(int argc, char*argv[]) {
   }
   cout << "Input Stream:" << strAddr << endl;
   //      Print the input stream (TESTING)
-  for (int i = 0; i < nums.size(); i++) {
+  /*for (int i = 0; i < nums.size(); i++) {
     cout << nums[i] << " ";  
-  }
+  }*/
   //      Close the input stream
   input.close();
   //      Open output file stream for writing
@@ -172,9 +186,8 @@ int main(int argc, char*argv[]) {
   //      Create Cache
   Cache* myCache = new Cache(entries,assoc);
   //      Loop through input
-  cout << nums.size() << endl;
+  //cout << nums.size() << endl;
   for (int i = 0; i < nums.size(); i++) {
-    cout << "Poop" << endl;
     //      Create Entry
     Entry* myEntry = new Entry(nums[i]);
     //      Calculate/Set Index & Tag
