@@ -10,8 +10,6 @@ using namespace std;
 string str;
 string strAddr;
 string charDigit;
-int count = 0;
-int  ways;
 
 //==========================================================
 //                      ENTRY CLASS
@@ -31,7 +29,7 @@ public:
   int get_tag() { return tag; }
 
   void set_valid(bool _valid) { valid = _valid; }
-  int get_valid() { return valid; }
+  bool get_valid() { return valid; }
 
   void set_index(int _index) { index = _index; }
   int get_index() { return index; }
@@ -43,7 +41,7 @@ public:
   int get_way() { return way; }
 
 private:  
-  int valid;
+  bool valid;
   unsigned tag;
   int index;
   int way;
@@ -65,66 +63,39 @@ public:
 
   //      Insert an Entry to the Cache
   void insert(Entry* entry, string out) {
+    
     //      Cache is empty
     if (cache.size() == 0) {
       cout << "Cache Empty, Miss: " << entry->get_data() << endl;
       miss(out,entry->get_data());
-      entry->set_way(0);
-      cache.emplace_back(entry->get_way(), entry->get_index(), true, entry->get_data());
-      cout << cache.size() << endl;
+      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
       return;
     }
     //      Check cache
-    
     for (int i = 0; i < cache.size(); i++) {
-      cout << get<3>(cache[i]) << endl;
-      //      HIT
-      if (get<3>(cache[i]) == entry->get_data()) { 
+      if (get<3>(cache[i]) == entry->get_data()) { //HIT
         cout << "Found Address, HIT: " << entry->get_data() << endl;
         hit(out,entry->get_data());
-        cache[i] = make_tuple(0,entry->get_index(),true,entry->get_data());
-        //      Set other Valids to false
-        for(int z = 0; z < cache.size(); z++) {
-          if (z != i) {
-            cache[z] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
-          }
-        }
         return;
       } else if (get<1>(cache[i]) == entry->get_index()) { //REPLACE
           cout << "Cache Conflict, Miss: " << entry->get_data() << endl;
           miss(out,entry->get_data());
-          //      Look for available ways
-          for (int j = 0; i < ways; i++) {
-            //Way is available
-            if(get<0>(cache[i]) == j) {
-              cout << "Set to new Way" << endl;
-              entry->set_way(j);
-              cache.emplace_back(j, entry->get_index(), true, entry->get_data());
-              //      Set other Valids to false
-              for(int z = 0; z < cache.size(); z++) {
-                if (z != i) {
-                  cache[z] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
-                }
-              }
-              return;
-            }
-          }
-          //  Way not available IMPLEMENT LRU
-          if (get<2>(cache[i]) == false) {
+          // IMPLEMENT LRU
+          if (get<2>(cache[i]) == true) {
             cout << "1 is replaced with 5" << endl;
-            //REPLACE BLOCK
-            cache[i] = make_tuple(0,entry->get_index(),true,entry->get_data());
-            //      Set other valids to false
-            for(int z = 0; z < cache.size(); z++) {
-              if (z != i) {
-                cache[z] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
-              }             
-            }
+            cache.emplace_back(0, entry->get_index(), false, entry->get_data());
             return;
           }
+          cout << "Set to new Way" << endl;
+          cache.emplace_back(1, entry->get_index(), true, entry->get_data());
+          return;
       }
     }
-      return;
+    //      MISS
+      cout << "Cache Open, Miss: " << entry->get_data() << endl;
+      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+      miss(out,entry->get_data());
+    return;
   }
 
   //      Outputs a HIT
@@ -180,7 +151,7 @@ int main(int argc, char*argv[]) {
   cout << "Number of entries: " << entries << endl;
   cout << "Associativity: " << assoc << endl;
   //return 0;
-  int ways = assoc;
+
   //      Create input and output files streams 
   ofstream output;
   ifstream input;
@@ -203,7 +174,7 @@ int main(int argc, char*argv[]) {
   while (iss >> num) {
     nums.push_back(num);
   }
-  cout << "Input Stream: " << strAddr << endl;
+  cout << "Input Stream:" << strAddr << endl;
   //      Print the input stream (TESTING)
   /*for (int i = 0; i < nums.size(); i++) {
     cout << nums[i] << " ";  
@@ -226,8 +197,6 @@ int main(int argc, char*argv[]) {
     myCache->insert(myEntry, out);
   }
   //      Write to output file
-  cout << "This is file out: " << endl;
-  cout<< out << endl;
   output << out;
   output.close();
   //      End simulation
