@@ -4,13 +4,12 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <tuple>
 
 using namespace std;
 string str;
 string strAddr;
-string delim = " ";
 string charDigit;
-int indx = 0;
 
 //==========================================================
 //                      ENTRY CLASS
@@ -156,16 +155,12 @@ int main(int argc, char*argv[]) {
     getline(input, str);
     strAddr += str + " ";
   }
-  for(int i = 0; i < strAddr.length(); i++) {
-    if(to_string(strAddr[i]) != delim) {
-      charDigit += strAddr[i];
-    }
-    cout << stoi(charDigit) << endl;
-    nums[indx] = stoi(charDigit);
-    charDigit = "";
-    indx++;
+  stringstream iss(strAddr);
+  int num;
+  while (iss >> num) {
+    nums.push_back(num);
   }
-  //cout << "Input Stream:" << strAddr << endl;
+  cout << "Input Stream:" << strAddr << endl;
   //      Print the input stream (TESTING)
   for (int i = 0; i < nums.size(); i++) {
     cout << nums[i] << " ";  
