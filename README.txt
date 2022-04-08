@@ -25,3 +25,6 @@ the time of submission I feel the code is incomplete and there
 are many things I would have liked to impliment or change to 
 be more accurate and expand in scope to simulate all types of
 caches.
+
+Current Bug: Valid Bit is not working as expected, resulting in
+HITS that are incorrect

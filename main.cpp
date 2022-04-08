@@ -10,6 +10,7 @@ using namespace std;
 string str;
 string strAddr;
 string charDigit;
+string out = "";
 
 //==========================================================
 //                      ENTRY CLASS
@@ -68,7 +69,7 @@ public:
     if (cache.size() == 0) {
       cout << "Cache Empty, Miss: " << entry->get_data() << endl;
       miss(out,entry->get_data());
-      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
       return;
     }
     //      Check cache
@@ -76,35 +77,57 @@ public:
       if (get<3>(cache[i]) == entry->get_data()) { //HIT
         cout << "Found Address, HIT: " << entry->get_data() << endl;
         hit(out,entry->get_data());
+        //      FIX Valid Bits
+        get<2>(cache[i]) = true;
+        for(int k = 0; k < cache.size(); k++) {
+          if (k != i) {
+            cache[k] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
+          }
+        }
         return;
       } else if (get<1>(cache[i]) == entry->get_index()) { //REPLACE
           cout << "Cache Conflict, Miss: " << entry->get_data() << endl;
           miss(out,entry->get_data());
           // IMPLEMENT LRU
-          if (get<2>(cache[i]) == true) {
+          if (get<2>(cache[i]) == false) {
             cout << "1 is replaced with 5" << endl;
-            cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+            cache[i] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),true,get<3>(cache[i]));
+            //cache.emplace_back(0, entry->get_index(), true, entry->get_data());
+            //      FIX Valid Bits
+            for(int k = 0; k < cache.size(); k++) {
+              if (k != i) {
+                cache[k] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
+              }
+            }
             return;
           }
           cout << "Set to new Way" << endl;
           cache.emplace_back(1, entry->get_index(), true, entry->get_data());
+          //      FIX Valid Bits
+          for(int k = 0; k < cache.size(); k++) {
+            if (k != i) {
+              cache[k] = make_tuple(get<0>(cache[i]),get<1>(cache[i]),false,get<3>(cache[i]));
+            }
+          }
           return;
       }
     }
     //      MISS
       cout << "Cache Open, Miss: " << entry->get_data() << endl;
-      cache.emplace_back(0, entry->get_index(), false, entry->get_data());
+      cache.emplace_back(0, entry->get_index(), true, entry->get_data());
       miss(out,entry->get_data());
     return;
   }
 
   //      Outputs a HIT
   void hit(string output, int addr) {
-    output.append(to_string(addr) + " : HIT \n");
+    out.append(to_string(addr) + " : HIT \n");
+    //cout << output << endl;
   };
   //      Outputs a MISS
   void miss(string output, int addr) {
-    output.append(to_string(addr) + " : MISS \n");
+    out.append(to_string(addr) + " : MISS \n");
+    //cout << output << endl;
   };
   //      Sets + Gets
   void set_assoc(int _assoc) { assoc = _assoc; }
@@ -145,7 +168,7 @@ int main(int argc, char*argv[]) {
   string input_filename = argv[3];
   //      Create output filename
   string output_filename = "cache_sim_output";
-  string out = "";
+  
 
   //      Print the args (TESTING)
   cout << "Number of entries: " << entries << endl;
